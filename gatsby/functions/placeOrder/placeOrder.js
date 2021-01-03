@@ -34,9 +34,25 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+function wait(ms = 0) {
+  return new Promise((resolve, reject) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 exports.handler = async (event, context) => {
   // Validate the incoming data is correct
+  // await wait(5000);
   const body = JSON.parse(event.body);
+  // Check if they have filled out honeypot
+  if (body.mapleSyrup) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: 'Boop beep bop zzzz good bye ERR 245156',
+      }),
+    };
+  }
   console.log(body);
   const requiredFields = ['email', 'name', 'order'];
   for (const field of requiredFields) {
@@ -49,6 +65,14 @@ exports.handler = async (event, context) => {
         }),
       };
     }
+  }
+  if (!body.order.length) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `Why would you order nothing?!`,
+      }),
+    };
   }
   // send the email
 
