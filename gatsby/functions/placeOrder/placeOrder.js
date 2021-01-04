@@ -24,10 +24,9 @@ function generateOrderEmail({ order, total }) {
 }
 
 // create a transport for nodemailer
-// look into postmark and sendgrid
 const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,
-  port: process.env.MAIL_PORT,
+  port: 587,
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
@@ -41,22 +40,19 @@ function wait(ms = 0) {
 }
 
 exports.handler = async (event, context) => {
-  // Validate the incoming data is correct
-  // await wait(5000);
   const body = JSON.parse(event.body);
-  // Check if they have filled out honeypot
+  // Check if they have filled out the honeypot
   if (body.mapleSyrup) {
     return {
       statusCode: 400,
-      body: JSON.stringify({
-        message: 'Boop beep bop zzzz good bye ERR 245156',
-      }),
+      body: JSON.stringify({ message: 'Boop beep bop zzzzstt good bye' }),
     };
   }
-  console.log(body);
+  // Validate the data coming in is correct
   const requiredFields = ['email', 'name', 'order'];
+
   for (const field of requiredFields) {
-    console.log(`Check that ${field} is good`);
+    console.log(`Checking that ${field} is good`);
     if (!body[field]) {
       return {
         statusCode: 400,
@@ -66,6 +62,8 @@ exports.handler = async (event, context) => {
       };
     }
   }
+
+  // make sure they actually have items in that order
   if (!body.order.length) {
     return {
       statusCode: 400,
@@ -74,14 +72,11 @@ exports.handler = async (event, context) => {
       }),
     };
   }
+
   // send the email
-
-  // send the success or error message
-
-  // Test send an email
   const info = await transporter.sendMail({
-    from: "Slick's Slices <nic.pete@gmail.com>",
-    to: `${body.name} <${body.email}>, nic@peterson.to`,
+    from: "Slick's Slices <slick@example.com>",
+    to: `${body.name} <${body.email}>, orders@example.com`,
     subject: 'New order!',
     html: generateOrderEmail({ order: body.order, total: body.total }),
   });
